@@ -1,0 +1,33 @@
+.layout {
+  height: 100%;
+  width: 100%;
+  background-color: #F2F9FB;
+}
+.layout .header {
+  background-color: #e8e8e8;
+  height: 7.4%;
+  width: 100%;
+}
+.layout .header .textArea {
+  width: 15.263%;
+  height: 100%;
+}
+.layout .layout {
+  height: 100%;
+  width: 100%;
+}
+.layout .layout .sider {
+  height: 100%;
+  background-color: antiquewhite;
+}
+.layout .layout .content {
+  margin-top: 10px;
+  height: 98%;
+  padding: 3% 4%;
+}
+.layout .layout .content .main {
+  height: 100%;
+  width: 100%;
+  margin: auto;
+}
+/*# sourceMappingURL=index.css.map */
