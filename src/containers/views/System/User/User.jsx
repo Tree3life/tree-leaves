@@ -1,12 +1,32 @@
 import React, {Component} from 'react';
-import {user} from "@/server";
+import {user, sysRole} from "@/server";
 
 import {Col, Form, Input, InputNumber, Radio, Row, Select, Tag} from "antd";
 import CRUDPage from "@/components/CRUDPage/CRUDPage";
 import {connect} from "react-redux";
+import {saveInCache} from "@/service/redux/action/cache";
 
-@connect(state => ({cache: state.cache}))
+@connect(state => ({cache: state.cache}), {saveInCache})
 class User extends Component {
+
+
+    async componentDidMount() {
+        //todo 查询角色进行选项的初始化
+        //    $formOptions .roles
+
+        let resp = await sysRole.getSysRoleList();
+        let roles = resp.data
+        // this.props.saveInCache({"$formOptions":{"roles": roles}})
+        //todo 解决此处使用saveInCache一直发送请求的bug
+        // this.props.saveInCache({
+        //     // "formOptions":resp.data,
+        //     // roles: resp.data.roles,//用户拥有的角色
+        // })
+
+        //todo 解决编辑后前端报错异常
+        localStorage.setItem("$formOptions", JSON.stringify({"roles": roles}))
+    }
+
     /**
      * 条件查询的布局
      * @returns {function(*)}
@@ -57,6 +77,7 @@ class User extends Component {
      * @returns {function(*)}
      */
     tableColumns() {
+        const {cache: {$formOptions}} = this.props
         return (columns) => {
             //添加列
             columns.push({title: '昵称', dataIndex: 'username', editable: true,});
@@ -72,9 +93,13 @@ class User extends Component {
                 render: roles => {
                     let result = "";
                     if (roles) {
-
-                        result = roles.map(item =>{
-                            return  <Tag key={item.id} >{item.role}</Tag>
+                        result = roles.map(item => {
+                            if (!item.id) {
+                                item = $formOptions.roles.find(e => {
+                                    return e.id === item
+                                })
+                            }
+                            return <Tag key={item.id + '' + item.key}>{item.role}</Tag>;
                         })
                     }
                     return result;
@@ -90,7 +115,7 @@ class User extends Component {
     saveFormLayout() {
         const {cache: {$formOptions: {roles}}} = this.props
 
-        function handleChange(value) {
+        const handleChange = (value) => {
             console.log(`selected ${value}`);
         }
 
@@ -187,17 +212,19 @@ class User extends Component {
 
                     <Form.Item label="角色">
                         {getFieldDecorator('roles', {
-                            initialValue: ["a1"],
+                            initialValue: [],
                         })(
                             <Select
                                 mode="multiple"
                                 style={{width: '100%'}}
                                 placeholder="请选择角色信息"
                                 onChange={handleChange}
+                                optionLabelProp="label"
                             >
                                 {/* eslint-disable-next-line array-callback-return */}
                                 {roles ? roles.map(item => {
-                                    return <Select.Option key={item.id}>{item.role}</Select.Option>
+                                    return <Select.Option key={item.id} value={item.id}
+                                                          label={item.role}>{item.role}</Select.Option>
                                 }) : ""}
                             </Select>,
                         )}
@@ -217,7 +244,12 @@ class User extends Component {
     }
 
     editRowConfig() {
-        const {cache: {$formOptions: {roles}}} = this.props
+
+        const handleChange = (value) => {
+            console.log(`selected ${value}`);
+        }
+
+        const {cache: {"$formOptions": {roles}}} = this.props
 
         return (context, cellProps) => {
             const {
@@ -250,10 +282,13 @@ class User extends Component {
                             mode="multiple"
                             style={{width: '100%'}}
                             placeholder="请选择角色信息"
+                            onChange={handleChange}
+                            optionLabelProp="label"
                         >
                             {/* eslint-disable-next-line array-callback-return */}
                             {roles ? roles.map(item => {
-                                return <Select.Option key={item.id} value={item.id}>{item.role}</Select.Option>
+                                return <Select.Option key={item.id} value={item.id}
+                                                      label={item.role}>{item.role}</Select.Option>
                             }) : ""}
                         </Select>
                 }
@@ -273,13 +308,19 @@ class User extends Component {
                 }
                 return itemRule
             }
-
             const elementInitValue = () => {
                 if (dataIndex === 'roles') {
                     let result = '';
                     //role
                     if (record[dataIndex]) {
-                        result = record[dataIndex].map(item => item.role)
+                        result = record[dataIndex].map(item => {
+                            if (!item.id) {
+                                item = this.props.cache['$formOptions'].roles.find(e => {
+                                    return e.id === item
+                                })
+                            }
+                            return item.id
+                        })
                     }
                     return result;
                 }
@@ -308,4 +349,5 @@ class User extends Component {
         );
     }
 }
+
 export default User

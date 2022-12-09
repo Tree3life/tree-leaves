@@ -18,8 +18,10 @@
  */
 import ACTION from "@/service/redux/action-type";
 
+let formOptions = JSON.parse(localStorage.getItem("$formOptions"));
+
 //todo 异步redux远程初始化加载$formOptions的roleOptions
-const initState = {"娃哈哈": "只能读,不能写","$formOptions":{"roles":[{id:'123',role:'上官'}]}}
+const initState = {"娃哈哈": "只能读,不能写","$formOptions":formOptions}
 
 /**
  * cache 本项目内部的缓存区

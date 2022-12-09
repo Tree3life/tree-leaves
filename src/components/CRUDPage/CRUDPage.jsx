@@ -138,7 +138,7 @@ class CRUDPage extends React.Component {
         const {apiDelete, primaryKey} = this.props
 
         try {
-             await apiDelete({[primaryKey]: id})
+            await apiDelete({[primaryKey]: id})
             this.setState({'data': this.state.data.filter(ele => ele[primaryKey] !== id)})
             message.success("删除成功", 1)
         } catch (error) {
@@ -165,8 +165,8 @@ class CRUDPage extends React.Component {
                     newData.splice(index, 1, paramObj);
                     this.setState({data: newData, editingKey: ''});
                     message.success("编辑成功", 1)
-                }catch (error){
-                    message.warn("编辑失败"+error, 3)
+                } catch (error) {
+                    message.warn("编辑失败" + error, 3)
                 }
 
             } else {
@@ -286,7 +286,7 @@ class QueryForm extends React.Component {
                 this.props.updateTableData(resp.data.map(ele => {
                     return {key: ele[primaryKey], ...ele}
                 }))
-            }catch (error){
+            } catch (error) {
                 message.warn(error, 3)
             }
         });
