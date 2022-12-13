@@ -37,8 +37,11 @@ export function cache(preState = initState, action) {
     if (type === ACTION.saveInCache) {
         // 获取data中的所有对象，并存入到catch中
         return {...preState, ...data}
+    }else if (type === ACTION.getCachedRoleOptions) {
+        return {...preState, ...data}
     } else {
-        return preState
+        return preState;
     }
 }
+
 

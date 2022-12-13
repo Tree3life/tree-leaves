@@ -1,12 +1,12 @@
 import React, {Component} from 'react';
-import {user, sysRole} from "@/server";
+import {user} from "@/server";
 
 import {Col, Form, Input, InputNumber, Radio, Row, Select, Tag} from "antd";
 import CRUDPage from "@/components/CRUDPage/CRUDPage";
 import {connect} from "react-redux";
-import {saveInCache} from "@/service/redux/action/cache";
+import {getCachedRoleOptions, saveInCache} from "@/service/redux/action/cache";
 
-@connect(state => ({cache: state.cache}), {saveInCache})
+@connect(state => ({cache: state.cache}), {saveInCache, getCachedRoleOptions})
 class User extends Component {
 
 
@@ -14,9 +14,6 @@ class User extends Component {
         //todo 查询角色进行选项的初始化
         //    $formOptions .roles
 
-        let resp = await sysRole.getSysRoleList();
-        let roles = resp.data
-        // this.props.saveInCache({"$formOptions":{"roles": roles}})
         //todo 解决此处使用saveInCache一直发送请求的bug
         // this.props.saveInCache({
         //     // "formOptions":resp.data,
@@ -24,7 +21,6 @@ class User extends Component {
         // })
 
         //todo 解决编辑后前端报错异常
-        localStorage.setItem("$formOptions", JSON.stringify({"roles": roles}))
     }
 
     /**
@@ -118,7 +114,7 @@ class User extends Component {
         const handleChange = (value) => {
             console.log(`selected ${value}`);
         }
-
+        // getCachedRoleOptions()
         return (form, component) => {
             const {state: {confirmDirty}} = component
             const {getFieldDecorator} = form

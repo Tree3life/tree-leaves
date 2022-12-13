@@ -3,6 +3,7 @@ import {Icon, Menu, message} from 'antd';
 import {Link} from "react-router-dom";
 import {connect} from "react-redux";
 import {saveInCache} from "@/service/redux/action/cache";
+import generateMenu from "@/util/menuHelper";
 
 
 const {SubMenu, Item} = Menu;
@@ -22,23 +23,9 @@ class AppMenu extends Component {
 
             const {cache} = this.props
             let crude = cache.pages
-
-            let menu = crude.filter(item => {
-                //内层循环生成子级菜单
-                let firstProcess = crude.filter(meta => {
-                    return meta.parentId === item.id
-                }).sort((curt, next) => {
-                    return curt.weights - next.weights
-                })
-                item.children = firstProcess
-                return item.parentId === 0
-            }).sort((curt, next) => curt.weights - next.weights)
-
             //菜单
             this.setState({
-                menus: menu.map(item => {
-                    return this.getMenuItem(item)
-                })
+                menus: generateMenu(crude)
             }, () => {//页面更新后，缓存菜单
                 this.props.saveInCache({menus: this.state.menus})
             })
@@ -78,14 +65,12 @@ class AppMenu extends Component {
 
         let hasChildren = !item.children || item.children.length === 0
         return {
+            ...item,
             key: item.path,
             icon: item.icon ? null : null,
             children: hasChildren ? undefined : item.children,
             label: item.title,
             type: null,
-            weights: item.weights,
-            id: item.id,
-            parentId: item.parentId
         }
     }
 

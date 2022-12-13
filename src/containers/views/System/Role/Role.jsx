@@ -1,13 +1,29 @@
 import React, {Component} from 'react';
 import moment from 'moment'
-import {Col, DatePicker, Form, Input, Radio, Row, Tag} from "antd";
+import {Col, DatePicker, Form, Input, Popover, Radio, Row, Tag, Tree, TreeSelect} from "antd";
 import TextArea from "antd/es/input/TextArea";
 
-import {sysRole as role} from "@/server";
+import {sysPage, sysRole as role} from "@/server";
 import CRUDPage from "@/components/CRUDPage/CRUDPage";
+import generateMenu from "@/util/menuHelper";
 
 class Role extends Component {
 
+    state = {
+        formConfig: {
+            options: {
+                pages: []
+            }
+        }
+    }
+
+    async componentDidMount() {
+        let {formConfig} = this.state
+        let resp = await sysPage.getMenuCrude();
+        let pages = resp.data;
+
+        this.setState({formConfig: {...formConfig, options: {...formConfig.options, pages: pages}}})
+    }
 
     layoutQueryForm = (form) => {
         const {getFieldDecorator} = form
@@ -38,8 +54,29 @@ class Role extends Component {
         )
     }
     layoutSaveForm = (form, component) => {
-        const {getFieldDecorator} = form
+        let {pages} = this.state.formConfig.options
 
+        const treeData = pages.map(p => {
+            return {
+                title: p.title,
+                value: p.id,
+                key: p.path + p.id,
+                // children:[]
+            }
+        })
+
+        const {getFieldDecorator} = form
+        const treeProps = {
+            treeData,
+            // value: [],
+            // onChange: this.onChange,
+            treeCheckable: true,
+            showCheckedStrategy: TreeSelect.SHOW_PARENT,
+            searchPlaceholder: '允许访问的页面',
+            style: {
+                width: '100%',
+            },
+        };
         return (
             <>
                 <Row>
@@ -73,8 +110,14 @@ class Role extends Component {
                             rules: [{required: false, message: '请配置首页路径!'}],
                         })(<Input/>)}
                     </Form.Item>
+                    <Form.Item label="页面配置">
+                        {getFieldDecorator('pages', {
+                            initialValue: [],
+                            rules: [{required: false, message: '页面配置'}],
+                        })(<TreeSelect {...treeProps} />)}
+                    </Form.Item>
                     <Form.Item label="优先级">
-                        {getFieldDecorator('weight', {
+                        {getFieldDecorator('weights', {
                             initialValue: 1,
                         }, {
                             rules: [{required: false, message: '请配置首页权重!'}],
@@ -112,6 +155,28 @@ class Role extends Component {
             return cellRules
         }
 
+        let {pages} = this.state.formConfig.options
+
+        const treeData = pages.map(p => {
+            return {
+                title: p.title,
+                value: p.id,
+                key: p.path + p.id,
+                // children:[]
+            }
+        })
+        const treeProps = {
+            treeData,
+            // value: [],
+            // onChange: this.onChange,
+            treeCheckable: true,
+            showCheckedStrategy: TreeSelect.SHOW_PARENT,
+            searchPlaceholder: '允许访问的页面',
+            style: {
+                width: '100%',
+            },
+        };
+
         const elementInitValue = () => {
             if (dataIndex === 'createTime') {
                 let currentVal = record[dataIndex];
@@ -119,6 +184,12 @@ class Role extends Component {
                     return moment(new Date())
                 }
                 return moment(currentVal)
+            }
+            if (dataIndex === 'pages') {
+                // {id: 2, parentId: -1, title: '出错了', description: '系统出错处理页', path: '/error', …}
+                return record[dataIndex].map(item => {
+                    return item.id
+                })
             }
 
             return record[dataIndex]
@@ -144,9 +215,13 @@ class Role extends Component {
                     </Radio.Group>;
             }
 
-            if (dataIndex === 'weight') {
+            if (dataIndex === 'weights') {
                 component =
                     <Input placeholder={"拥有多个角色时匹配首页的优先级(数字越大优先级越高)"} type={"number"}/>
+            }
+
+            if (dataIndex === "pages") {
+                component = <TreeSelect {...treeProps}/>
             }
             return component;
         }
@@ -154,22 +229,43 @@ class Role extends Component {
         return {elementRules, elementInitValue, elementType, style: {margin: 0,}}
     }
 
+
     tableColumnsConfig = (columns) => {
         //添加列
         columns.push({title: '角色名称', dataIndex: 'role', editable: true,});
         columns.push({title: '角色描述', dataIndex: 'description', editable: true,});
         columns.push({title: '角色首页', dataIndex: 'home', editable: true,});
-        columns.push({title: '优先级', dataIndex: 'weight', editable: true,});
+        columns.push({title: '优先级', dataIndex: 'weights', editable: true,});
         columns.push({
             title: '状态', dataIndex: 'locked', editable: true,
             width: '10%',
             render: item => (<Tag color={item ? 'geekblue' : 'green'}>{item ? '锁定' : '正常'}</Tag>),
         });
+
+
         columns.push({
-            title: '创建时间', dataIndex: 'createTime', editable: true,
+            title: '页面配置', dataIndex: 'pages', editable: true,
+            width: '20%',
+            render: item => {
+                const content =
+                    <Tree
+                        defaultExpandAll
+                        treeData={generateMenu(item)}
+                    >
+                    </Tree>
+                return (item ? (
+                    <Popover content={content} title="Title" trigger="hover">
+                        <span>查看页面配置</span>
+                    </Popover>
+                ) : "")
+            }
+        });
+        columns.push({
+            title: '创建时间', dataIndex: 'createTime', editable: false,
             render: item => (item ? (typeof item === 'string' ? item : item.format("YYYY-MM-DD HH-MM-SS")) : ""),
         });
-        columns.push({title: '更新时间', dataIndex: 'updateTime', editable: false,
+        columns.push({
+            title: '更新时间', dataIndex: 'updateTime', editable: false,
             render: item => (item ? (typeof item === 'string' ? item : item.format("YYYY-MM-DD HH-MM-SS")) : ""),
         });
         // return columns
@@ -186,7 +282,7 @@ class Role extends Component {
     proUpdateSysRole = (fieldsValue) => {
         const values = {
             ...fieldsValue,
-            createTime: fieldsValue['createTime'].format('YYYY-MM-DD  HH:mm:ss')
+            // createTime: fieldsValue['createTime'].format('YYYY-MM-DD  HH:mm:ss')
         }
         return role.updateSysRole(values)
     }

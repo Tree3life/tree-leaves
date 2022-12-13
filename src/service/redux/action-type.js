@@ -3,6 +3,7 @@
 */
 export default Object.freeze({
     saveInCache: Symbol("将后端共享的固定常量信息写入缓存"),
+    getCachedRoleOptions: Symbol("获取缓存的角色信息"),
     /**
      * 用户信息相关
      */
@@ -12,8 +13,8 @@ export default Object.freeze({
     /**
      * 系统信息相关
      */
-    saveMenuList:Symbol('缓存菜单信息'),
-    savePermissionInfo:Symbol('缓存权限信息'),
+    saveMenuList: Symbol('缓存菜单信息'),
+    savePermissionInfo: Symbol('缓存权限信息'),
 
     sendMessage: '发送websocket消息',
     parseMessage: '解析websocket消息'

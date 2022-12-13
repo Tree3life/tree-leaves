@@ -53,9 +53,6 @@ class Login extends Component {
             message.success('登录成功!', 3)
             this.props.history.replace('/admin/sys/user')
         }
-
-        console.log(info);
-        console.log(resp)
     }
 
     render() {
